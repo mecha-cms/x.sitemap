@@ -2,30 +2,35 @@
 
 function xml($any = null) {
     extract($GLOBALS, \EXTR_SKIP);
-    $d = \LOT . \DS . 'page' . \DS . ($any ?? \trim(\State::get('path'), '/'));
+    $t = $_SERVER['REQUEST_TIME'];
+    $f = \LOT . \DS . 'page' . \DS . ($any ?? \trim(\State::get('path'), '/'));
     $page = new \Page(\File::exist([
-        $d . '.page',
-        $d . '.archive'
+        $f . '.page',
+        $f . '.archive'
     ]) ?: null);
+    $exist = $page->exist;
     $out = "";
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
-    if (isset($any) && $page->exist) {
-        $t = (new \Time(\time()))->format('r');
+    if (isset($any)) {
         $out .= '<?xml version="1.0" encoding="UTF-8"?>';
         $out .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        foreach (\g(\Path::F($page->path), 0, true) as $k => $v) {
-            $out .= '<url>';
-            $out .= '<loc>' . $url . '/' . ($r = \Path::R($k, \LOT . \DS . 'page', '/')) . '</loc>';
-            $priority = \b(1 - (\substr_count($r, '/') * .1), [.5, 1]); // `0.5` to `1.0`
-            $exist = \File::exist([
-                $k . '.page',
-                $k . '.archive'
-            ]);
-            $out .= '<lastmod>' . (new \Time($exist ? \filemtime($exist) : null))->ISO8601 . '</lastmod>';
-            $out .= '<changefreq>monthly</changefreq>';
-            $out .= '<priority>' . $priority . '</priority>';
-            $out .= '</url>';
+        if ($exist) {
+            foreach (\g($f, 0, true) as $k => $v) {
+                $out .= '<url>';
+                $out .= '<loc>' . $url . '/' . ($r = \Path::R($k, \LOT . \DS . 'page', '/')) . '</loc>';
+                $priority = \b(1 - (\substr_count($r, '/') * .1), [.5, 1]); // `0.5` to `1.0`
+                $kk = \File::exist([
+                    $k . '.page',
+                    $k . '.archive'
+                ]);
+                $out .= '<lastmod>' . \date('c', $kk ? \filemtime($kk) : $t) . '</lastmod>';
+                $out .= '<changefreq>monthly</changefreq>';
+                $out .= '<priority>' . $priority . '</priority>';
+                $out .= '</url>';
+            }
+        } else {
+            $this->status(404);
         }
         $out .= '</urlset>';
     // `./sitemap.xml`
@@ -37,22 +42,26 @@ function xml($any = null) {
                 // Ignore empty folder(s)
                 continue;
             }
-            $exist = \File::exist([
+            $kk = \File::exist([
                 $k . '.page',
                 $k . '.archive'
             ]);
             $out .= '<sitemap>';
             $out .= '<loc>' . $url . '/' . \Path::R($k, \LOT . \DS . 'page', '/') . '/sitemap.xml</loc>';
-            $out .= '<lastmod>' . (new \Time($exist ? \filemtime($exist) : \time()))->ISO8601 . '</lastmod>';
+            $out .= '<lastmod>' . \date('c', $kk ? \filemtime($kk) : $t) . '</lastmod>';
             $out .= '</sitemap>';
         }
         $out .= '</sitemapindex>';
     }
     $i = 60 * 60 * 24; // Cache output for a day
-    $this->lot([
-        'Cache-Control' => 'private, max-age=' . $i,
-        'Expires' => \gmdate('D, d M Y H:i:s', \time() + $i) . ' GMT',
+    $this->lot($exist ? [
+        'Cache-Control' => 'max-age=' . $i . ', private',
+        'Expires' => \gmdate('D, d M Y H:i:s', $t + $i) . ' GMT',
         'Pragma' => 'private'
+    ] : [
+        'Cache-Control' => 'max-age=0, must-revalidate, no-cache, no-store',
+        'Expires' => '0',
+        'Pragma' => 'no-cache'
     ]);
     $this->type('application/xml');
     $this->content($out);
