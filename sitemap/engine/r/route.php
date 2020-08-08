@@ -3,7 +3,7 @@
 function xml($any = null) {
     extract($GLOBALS, \EXTR_SKIP);
     $t = $_SERVER['REQUEST_TIME'];
-    $f = \LOT . \DS . 'page' . \DS . ($any ?? \trim(\State::get('path'), '/'));
+    $f = \LOT . \DS . 'page' . \DS . ($any ?? \trim($state->path, '/'));
     $page = new \Page(\File::exist([
         $f . '.page',
         $f . '.archive'
@@ -17,14 +17,16 @@ function xml($any = null) {
         $out .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
         if ($exist) {
             foreach (\g($f, 0, true) as $k => $v) {
+                if (!$kk = \File::exist([
+                    $k . '.page',
+                    $k . '.archive'
+                ])) {
+                    continue;
+                }
                 $out .= '<url>';
                 $out .= '<loc>' . $url . '/' . ($r = \Path::R($k, \LOT . \DS . 'page', '/')) . '</loc>';
                 $priority = \b(1 - (\substr_count($r, '/') * .1), [.5, 1]); // `0.5` to `1.0`
-                $kk = \File::exist([
-                    $k . '.page',
-                    $k . '.archive'
-                ]);
-                $out .= '<lastmod>' . \date('c', $kk ? \filemtime($kk) : $t) . '</lastmod>';
+                $out .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
                 $out .= '<changefreq>monthly</changefreq>';
                 $out .= '<priority>' . $priority . '</priority>';
                 $out .= '</url>';
@@ -42,13 +44,15 @@ function xml($any = null) {
                 // Ignore empty folder(s)
                 continue;
             }
-            $kk = \File::exist([
+            if (!$kk = \File::exist([
                 $k . '.page',
                 $k . '.archive'
-            ]);
+            ])) {
+                continue;
+            }
             $out .= '<sitemap>';
             $out .= '<loc>' . $url . '/' . \Path::R($k, \LOT . \DS . 'page', '/') . '/sitemap.xml</loc>';
-            $out .= '<lastmod>' . \date('c', $kk ? \filemtime($kk) : $t) . '</lastmod>';
+            $out .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
             $out .= '</sitemap>';
         }
         $out .= '</sitemapindex>';
