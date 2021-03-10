@@ -1,4 +1,4 @@
-<?php namespace _\lot\x;
+<?php namespace x;
 
 function sitemap($content) {
     global $state, $url;
@@ -7,6 +7,6 @@ function sitemap($content) {
 
 // Insert some HTML `<link>` that maps to the sitemap resource
 if ('sitemap.xml' !== \basename($url->path)) {
-    // Make sure to run the hook before `_\lot\x\minify`
+    // Make sure to run the hook before `x\minify`
     \Hook::set('content', __NAMESPACE__ . "\\sitemap", 1.9);
 }

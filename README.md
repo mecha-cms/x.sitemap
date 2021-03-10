@@ -4,6 +4,10 @@ Sitemap Extension for Mecha
 Release Notes
 -------------
 
+### main
+
+ - [x] [@mecha-cms/mecha#96](https://github.com/mecha-cms/mecha/issues/96)
+
 ### 2.0.1
 
  - Fixed sitemap exposed private folders that do not have any relationship with the page file.
