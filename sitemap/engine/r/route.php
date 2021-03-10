@@ -1,4 +1,4 @@
-<?php namespace _\lot\x\sitemap;
+<?php namespace x\sitemap;
 
 function xml($any = null) {
     extract($GLOBALS, \EXTR_SKIP);
@@ -59,13 +59,13 @@ function xml($any = null) {
     }
     $i = 60 * 60 * 24; // Cache output for a day
     $this->lot($exist ? [
-        'Cache-Control' => 'max-age=' . $i . ', private',
-        'Expires' => \gmdate('D, d M Y H:i:s', $t + $i) . ' GMT',
-        'Pragma' => 'private'
+        'cache-control' => 'max-age=' . $i . ', private',
+        'expires' => \gmdate('D, d M Y H:i:s', $t + $i) . ' GMT',
+        'pragma' => 'private'
     ] : [
-        'Cache-Control' => 'max-age=0, must-revalidate, no-cache, no-store',
-        'Expires' => '0',
-        'Pragma' => 'no-cache'
+        'cache-control' => 'max-age=0, must-revalidate, no-cache, no-store',
+        'expires' => '0',
+        'pragma' => 'no-cache'
     ]);
     $this->type('application/xml');
     $this->content($out);
