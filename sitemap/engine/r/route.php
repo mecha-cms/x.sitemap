@@ -2,24 +2,24 @@
 
 function xml($any = null) {
     extract($GLOBALS, \EXTR_SKIP);
-    $t = $_SERVER['REQUEST_TIME'];
     $f = \LOT . \DS . 'page' . \DS . ($any ?? \trim($state->path, '/'));
     $page = new \Page(\File::exist([
-        $f . '.page',
-        $f . '.archive'
+        $f . '.archive',
+        $f . '.page'
     ]) ?: null);
-    $exist = $page->exist;
+    $page_exist = $page->exist;
+    $t = $_SERVER['REQUEST_TIME'];
     $out = "";
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
     if (isset($any)) {
         $out .= '<?xml version="1.0" encoding="UTF-8"?>';
         $out .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        if ($exist) {
+        if ($page_exist) {
             foreach (\g($f, 0, true) as $k => $v) {
                 if (!$kk = \File::exist([
-                    $k . '.page',
-                    $k . '.archive'
+                    $k . '.archive',
+                    $k . '.page'
                 ])) {
                     continue;
                 }
@@ -45,8 +45,8 @@ function xml($any = null) {
                 continue;
             }
             if (!$kk = \File::exist([
-                $k . '.page',
-                $k . '.archive'
+                $k . '.archive',
+                $k . '.page'
             ])) {
                 continue;
             }
@@ -58,7 +58,7 @@ function xml($any = null) {
         $out .= '</sitemapindex>';
     }
     $i = 60 * 60 * 24; // Cache output for a day
-    $this->lot($exist ? [
+    $this->lot($page_exist ? [
         'cache-control' => 'max-age=' . $i . ', private',
         'expires' => \gmdate('D, d M Y H:i:s', $t + $i) . ' GMT',
         'pragma' => 'private'
