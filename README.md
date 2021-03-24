@@ -14,4 +14,4 @@ Release Notes
 
 ### 2.0.0
 
- - Initial release. Previously was combined with the `feed` extension.
+ - Initial release. Previously was combined with the [`feed`](https://github.com/mecha-cms/x.feed) extension.
