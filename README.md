@@ -4,6 +4,10 @@ Sitemap Extension for [Mecha](https://github.com/mecha-cms/mecha)
 Release Notes
 -------------
 
+### 3.0.0
+
+ - Updated for Mecha 3.0.0.
+
 ### 2.0.2
 
  - [@mecha-cms/mecha#96](https://github.com/mecha-cms/mecha/issues/96)
