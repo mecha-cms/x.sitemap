@@ -29,7 +29,7 @@ namespace x\sitemap {
         $content = "";
         // `./foo/sitemap.xml`
         // `./foo/bar/sitemap.xml`
-        if (\substr_count($path, '/')) {
+        if (\substr_count($path, '/') > 1) {
             $content .= '<?xml version="1.0" encoding="utf-8"?>';
             $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             if ($page_exist) {
