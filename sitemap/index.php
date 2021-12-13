@@ -14,18 +14,15 @@ namespace x {
 
 namespace x\sitemap {
     function route($path) {
-        if ('sitemap.xml' !== \basename($path)) {
-            return;
-        }
         extract($GLOBALS, \EXTR_SKIP);
-        $name = \trim(\dirname($path), '.');
-        $folder = \LOT . \D . 'page' . \D . \trim(\strtr($name ?: $state->route, '/', \D), \D);
+        $path = \trim($path ?? "", '/');
+        $route = \trim($state->route ?? "", '/');
+        $folder = \dirname(\LOT . \D . 'page' . \D . ($path ?: $route));
         $page = new \Page(\exist([
             $folder . '.archive',
             $folder . '.page'
         ], 1) ?: null);
         $page_exist = $page->exist();
-        $t = $_SERVER['REQUEST_TIME'];
         $content = "";
         // `./foo/sitemap.xml`
         // `./foo/bar/sitemap.xml`
@@ -83,7 +80,7 @@ namespace x\sitemap {
         \status($page_exist ? 200 : 404, $page_exist ? [
             'cache-control' => 'max-age=' . $age . ', private',
             'content-length' => $size,
-            'expires' => \gmdate('D, d M Y H:i:s', $t + $age) . ' GMT',
+            'expires' => \gmdate('D, d M Y H:i:s', $age + $_SERVER['REQUEST_TIME']) . ' GMT',
             'pragma' => 'private'
         ] : [
             'cache-control' => 'max-age=0, must-revalidate, no-cache, no-store',
@@ -96,5 +93,7 @@ namespace x\sitemap {
         \Hook::fire('let');
         exit;
     }
-    \Hook::set('route', __NAMESPACE__ . "\\route", 10);
+    if ('sitemap.xml' === \basename($url->path)) {
+        \Hook::set('route', __NAMESPACE__ . "\\route", 10);
+    }
 }
