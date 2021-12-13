@@ -41,7 +41,7 @@ namespace x\sitemap {
                         continue;
                     }
                     $content .= '<url>';
-                    $content .= '<loc>' . $url . '/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/')) . '</loc>';
+                    $content .= '<loc>' . \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/'))]) . '</loc>';
                     $priority = \b(1 - (\substr_count($r, '/') * .1), [.5, 1]); // `0.5` to `1.0`
                     $content .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
                     $content .= '<changefreq>monthly</changefreq>';
@@ -52,6 +52,7 @@ namespace x\sitemap {
             $content .= '</urlset>';
         // `./sitemap.xml`
         } else {
+            $page_exist = true;
             $content .= '<?xml version="1.0" encoding="utf-8"?>';
             $content .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             foreach (\g(\LOT . \D . 'page', 0, true) as $k => $v) {
@@ -66,7 +67,7 @@ namespace x\sitemap {
                     continue;
                 }
                 $content .= '<sitemap>';
-                $content .= '<loc>' . $url . '/' . \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/') . '/sitemap.xml</loc>';
+                $content .= '<loc>' . \Hook::fire('link', ['/' . \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/') . '/sitemap.xml']) . '</loc>';
                 $content .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
                 $content .= '</sitemap>';
             }
@@ -74,22 +75,23 @@ namespace x\sitemap {
         }
         $content = \Hook::fire('content', [$content]);
         $age = 60 * 60 * 24; // Cache output for a day
-        \status($page_exist ? 200 : 404, $page_exist ? [
-            'cache-control' => 'max-age=' . $age . ', private',
-            'expires' => \gmdate('D, d M Y H:i:s', $t + $age) . ' GMT',
-            'pragma' => 'private'
-        ] : [
-            'cache-control' => 'max-age=0, must-revalidate, no-cache, no-store',
-            'expires' => '0',
-            'pragma' => 'no-cache'
-        ]);
-        \type('application/xml');
         \ob_start();
         \ob_start("\\ob_gzhandler");
         echo $content; // The response body
         \ob_end_flush();
-        // <https://www.php.net/manual/en/function.ob-get-length.php#59294>
-        \header('content-length: ' . \ob_get_length());
+        $size = \ob_get_length();
+        \status($page_exist ? 200 : 404, $page_exist ? [
+            'cache-control' => 'max-age=' . $age . ', private',
+            'content-length' => $size,
+            'expires' => \gmdate('D, d M Y H:i:s', $t + $age) . ' GMT',
+            'pragma' => 'private'
+        ] : [
+            'cache-control' => 'max-age=0, must-revalidate, no-cache, no-store',
+            'content-length' => $size,
+            'expires' => '0',
+            'pragma' => 'no-cache'
+        ]);
+        \type('application/xml');
         echo \ob_get_clean();
         \Hook::fire('let');
         exit;
