@@ -2,7 +2,7 @@
 
 namespace x {
     function sitemap($content) {
-        extract($GLOBALS, \EXTR_SKIP);
+        \extract($GLOBALS, \EXTR_SKIP);
         return \strtr($content, ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" type="application/xml" title="' . \i('Sitemap') . ' | ' . \w($site->title) . '"></head>']);
     }
     // Insert some HTML `<link>` that maps to the sitemap resource
@@ -14,7 +14,7 @@ namespace x {
 
 namespace x\sitemap {
     function route($path) {
-        extract($GLOBALS, \EXTR_SKIP);
+        \extract($GLOBALS, \EXTR_SKIP);
         $path = \trim($path ?? "", '/');
         $route = \trim($state->route ?? "", '/');
         $folder = \dirname(\LOT . \D . 'page' . \D . ($path ?: $route));
