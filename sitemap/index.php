@@ -6,7 +6,7 @@ namespace x {
         return \strtr($content, ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" type="application/xml" title="' . \i('Sitemap') . ' | ' . \w($site->title) . '"></head>']);
     }
     // Insert some HTML `<link>` that maps to the sitemap resource
-    if ('sitemap.xml' !== \basename($url->path)) {
+    if ('sitemap.xml' !== \basename($url->path ?? "")) {
         // Make sure to run the hook before `x\minify`
         \Hook::set('content', __NAMESPACE__ . "\\sitemap", 1.9);
     }
@@ -93,7 +93,7 @@ namespace x\sitemap {
         \Hook::fire('let');
         exit;
     }
-    if ('sitemap.xml' === \basename($url->path)) {
+    if ('sitemap.xml' === \basename($url->path ?? "")) {
         \Hook::set('route', __NAMESPACE__ . "\\route", 10);
     }
 }
