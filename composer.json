@@ -1,0 +1,8 @@
+{
+  "description": "Add sitemap feature.",
+  "license": "GPL-3.0-or-later",
+  "name": "mecha-cms/x.sitemap",
+  "require": {
+    "mecha-cms/x.page": "^2.0.0"
+  }
+}
