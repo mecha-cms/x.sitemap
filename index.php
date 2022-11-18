@@ -48,7 +48,7 @@ namespace x\sitemap {
                     }
                     $content .= '<url>';
                     $content .= '<loc>' . \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/'))]) . '</loc>';
-                    $priority = \b(1 - (\substr_count($r, '/') * .1), [.5, 1]); // `0.5` to `1.0`
+                    $priority = \b(1 - (\substr_count($r, '/') * 0.1), [0.5, 1]); // `0.5` to `1.0`
                     $content .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
                     $content .= '<changefreq>monthly</changefreq>';
                     $content .= '<priority>' . $priority . '</priority>';
