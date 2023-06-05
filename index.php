@@ -1,5 +1,6 @@
 <?php namespace x\sitemap;
 
+// Insert some HTML `<link>` that maps to the sitemap resource
 function content($content) {
     \extract($GLOBALS, \EXTR_SKIP);
     return \strtr($content ?? "", ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($site->title) . '" type="application/xml"></head>']);
@@ -23,14 +24,19 @@ function route($content, $path) {
         $folder . '.archive',
         $folder . '.page'
     ], 1) ?: null);
-    $page_exist = $page->exist();
+    $exist = $page->exist();
     $content = "";
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
     if ("" !== $path) {
-        $content .= '<?xml version="1.0" encoding="utf-8"?>';
-        $content .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        if ($page_exist) {
+        $lot = [
+            0 => 'urlset',
+            1 => [],
+            2 => [
+                'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
+            ]
+        ];
+        if ($exist) {
             foreach (\g($folder, 0, true) as $k => $v) {
                 if (!$kk = \exist([
                     $k . '.archive',
@@ -38,21 +44,30 @@ function route($content, $path) {
                 ], 1)) {
                     continue;
                 }
-                $content .= '<url>';
-                $content .= '<loc>' . \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/'))]) . '</loc>';
+                $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/'))]);
                 $priority = \b(1 - (\substr_count($r, '/') * 0.1), [0.5, 1]); // `0.5` to `1.0`
-                $content .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
-                $content .= '<changefreq>monthly</changefreq>';
-                $content .= '<priority>' . $priority . '</priority>';
-                $content .= '</url>';
+                $lot[1][$loc] = [
+                    0 => 'url',
+                    1 => [
+                        'changefreq' => ['changefreq', 'monthly', []],
+                        'lastmod' => ['lastmod', \date('c', \filemtime($kk)), []],
+                        'loc' => ['loc', $loc, []],
+                        'priority' => ['priority', $priority, []]
+                    ],
+                    2 => []
+                ];
             }
         }
-        $content .= '</urlset>';
     // `./sitemap.xml`
     } else {
-        $page_exist = true;
-        $content .= '<?xml version="1.0" encoding="utf-8"?>';
-        $content .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        $exist = true;
+        $lot = [
+            0 => 'sitemapindex',
+            1 => [],
+            2 => [
+                'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
+            ]
+        ];
         foreach (\g(\LOT . \D . 'page', 0, true) as $k => $v) {
             if (0 === \q(\g($k, 'archive,page'))) {
                 // Ignore empty folder(s)
@@ -64,15 +79,20 @@ function route($content, $path) {
             ])) {
                 continue;
             }
-            $content .= '<sitemap>';
-            $content .= '<loc>' . \Hook::fire('link', ['/' . \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/') . '/sitemap.xml']) . '</loc>';
-            $content .= '<lastmod>' . \date('c', \filemtime($kk)) . '</lastmod>';
-            $content .= '</sitemap>';
+            $loc = \Hook::fire('link', ['/' . \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/') . '/sitemap.xml']);
+            $lot[1][$loc] = [
+                0 => 'sitemap',
+                1 => [
+                    'lastmod' => ['lastmod', \date('c', \filemtime($kk)), []],
+                    'loc' => ['loc', $loc, []]
+                ],
+                2 => []
+            ];
         }
-        $content .= '</sitemapindex>';
     }
     $age = 60 * 60 * 24; // Cache output for a day
-    \status($page_exist ? 200 : 404, $page_exist ? [
+    $content = '<?xml version="1.0" encoding="utf-8"?>' . (new \XML(\Hook::fire('y.sitemap', [$lot], $page), true));
+    \status($exist ? 200 : 404, $exist ? [
         'cache-control' => 'max-age=' . $age . ', private',
         'expires' => \gmdate('D, d M Y H:i:s', $age + $_SERVER['REQUEST_TIME']) . ' GMT',
         'pragma' => 'private'
@@ -85,8 +105,8 @@ function route($content, $path) {
     return $fire ? $fire . '(' . \json_encode($content, \JSON_HEX_AMP | \JSON_HEX_APOS | \JSON_HEX_QUOT | \JSON_HEX_TAG | \JSON_UNESCAPED_UNICODE) . ');' : $content;
 }
 
-// Insert some HTML `<link>` that maps to the sitemap resource
-if ('sitemap.xml' !== \basename($url->path ?? "")) {
-    \Hook::set('content', __NAMESPACE__ . "\\content", -1);
+if ('sitemap.xml' === \basename($url->path ?? "")) {
     \Hook::set('route', __NAMESPACE__ . "\\route", 10);
+} else {
+    \Hook::set('content', __NAMESPACE__ . "\\content", -1);
 }
