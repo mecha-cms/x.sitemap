@@ -3,7 +3,7 @@
 // Insert some HTML `<link>` that maps to the sitemap resource
 function content($content) {
     \extract($GLOBALS, \EXTR_SKIP);
-    return \strtr($content ?? "", ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($site->title) . '" type="application/xml"></head>']);
+    return \strtr($content ?? "", ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($state->title) . '" type="application/xml"></head>']);
 }
 
 function route($content, $path) {
@@ -20,12 +20,10 @@ function route($content, $path) {
     $path = \trim(\dirname($path ?? ""), '/');
     $route = \trim($state->route ?? 'index', '/');
     $folder = \LOT . \D . 'page' . \D . ($path ?: $route);
-    $page = new \Page(\exist([
+    $page = new \Page($exist = \exist([
         $folder . '.archive',
         $folder . '.page'
     ], 1) ?: null);
-    $exist = $page->exist();
-    $content = "";
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
     if ("" !== $path) {
@@ -49,10 +47,10 @@ function route($content, $path) {
                 $lot[1][$loc] = [
                     0 => 'url',
                     1 => [
-                        'changefreq' => ['changefreq', 'monthly', []],
-                        'lastmod' => ['lastmod', \date('c', \filemtime($kk)), []],
-                        'loc' => ['loc', $loc, []],
-                        'priority' => ['priority', $priority, []]
+                        ['changefreq', 'monthly', []],
+                        ['lastmod', \date('c', \filemtime($kk)), []],
+                        ['loc', $loc, []],
+                        ['priority', $priority, []]
                     ],
                     2 => []
                 ];
@@ -83,8 +81,8 @@ function route($content, $path) {
             $lot[1][$loc] = [
                 0 => 'sitemap',
                 1 => [
-                    'lastmod' => ['lastmod', \date('c', \filemtime($kk)), []],
-                    'loc' => ['loc', $loc, []]
+                    ['lastmod', \date('c', \filemtime($kk)), []],
+                    ['loc', $loc, []]
                 ],
                 2 => []
             ];
@@ -105,8 +103,8 @@ function route($content, $path) {
     return $fire ? $fire . '(' . \json_encode($content, \JSON_HEX_AMP | \JSON_HEX_APOS | \JSON_HEX_QUOT | \JSON_HEX_TAG | \JSON_UNESCAPED_UNICODE) . ');' : $content;
 }
 
-if ('sitemap.xml' === \basename($url->path ?? "")) {
-    \Hook::set('route', __NAMESPACE__ . "\\route", 10);
-} else {
+if ('sitemap.xml' !== \basename($url->path ?? "")) {
     \Hook::set('content', __NAMESPACE__ . "\\content", -1);
+} else {
+    \Hook::set('route', __NAMESPACE__ . "\\route", 10);
 }
