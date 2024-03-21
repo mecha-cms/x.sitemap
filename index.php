@@ -2,7 +2,7 @@
 
 // Insert some HTML `<link>` that maps to the sitemap resource
 function content($content) {
-    \extract($GLOBALS, \EXTR_SKIP);
+    \extract(\lot(), \EXTR_SKIP);
     return \strtr($content ?? "", ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($state->title) . '" type="application/xml"></head>']);
 }
 
@@ -10,7 +10,7 @@ function route($content, $path) {
     if (null !== $content) {
         return $content;
     }
-    \extract($GLOBALS, \EXTR_SKIP);
+    \extract(\lot(), \EXTR_SKIP);
     $fire = $_GET['fire'] ?? null;
     // Validate function name
     if ($fire && !\preg_match('/^[a-z_$][\w$]*(\.[a-z_$][\w$]*)*$/i', $fire)) {
@@ -88,7 +88,7 @@ function route($content, $path) {
             ];
         }
     }
-    $age = 60 * 60 * 24; // Cache output for a day
+    $age = 60 * 60 * 24; // Cache for a day
     $content = '<?xml version="1.0" encoding="utf-8"?>' . (new \XML(\Hook::fire('y.sitemap', [$lot], $page), true));
     \status($exist ? 200 : 404, $exist ? [
         'cache-control' => 'max-age=' . $age . ', private',
@@ -100,7 +100,7 @@ function route($content, $path) {
         'pragma' => 'no-cache'
     ]);
     \type('application/' . ($fire ? 'javascript' : 'xml'));
-    return $fire ? $fire . '(' . \json_encode($content, \JSON_HEX_AMP | \JSON_HEX_APOS | \JSON_HEX_QUOT | \JSON_HEX_TAG | \JSON_UNESCAPED_UNICODE) . ');' : $content;
+    return $fire ? $fire . '(' . \To::JSON($content) . ');' : $content;
 }
 
 if ('sitemap.xml' !== \basename($url->path ?? "")) {
