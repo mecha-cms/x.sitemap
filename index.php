@@ -19,7 +19,7 @@ function route($content, $path) {
     }
     $path = \trim(\dirname($path ?? ""), '/');
     $route = \trim($state->route ?? 'index', '/');
-    $folder = \LOT . \D . 'page' . \D . ($path ?: $route);
+    $folder = ($folder_page = \LOT . \D . 'page') . \D . ($path ?: $route);
     $page = new \Page($exist = \exist([
         $folder . '.archive',
         $folder . '.page'
@@ -34,7 +34,22 @@ function route($content, $path) {
                 'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
             ]
         ];
-        if ($exist) {
+        // `./-/sitemap.xml`
+        if ('-' === $path) {
+            foreach (\g($folder_page, 'archive,page') as $k => $v) {
+                $loc = \Hook::fire('link', ['/' . ($route === ($n = \pathinfo($k, \PATHINFO_FILENAME)) ? "" : $n)]);
+                $lot[1][$loc] = [
+                    0 => 'url',
+                    1 => [
+                        ['changefreq', 'monthly', []],
+                        ['lastmod', \date('c', \filemtime($k)), []],
+                        ['loc', $loc, []],
+                        ['priority', 1, []]
+                    ],
+                    2 => []
+                ];
+            }
+        } else if ($exist) {
             foreach (\g($folder, 0, true) as $k => $v) {
                 if (!$kk = \exist([
                     $k . '.archive',
@@ -42,7 +57,7 @@ function route($content, $path) {
                 ], 1)) {
                     continue;
                 }
-                $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/'))]);
+                $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [$folder_page . \D => ""]), \D, '/'))]);
                 $priority = \b(1 - (\substr_count($r, '/') * 0.1), [0.5, 1]); // `0.5` to `1.0`
                 $lot[1][$loc] = [
                     0 => 'url',
@@ -66,7 +81,16 @@ function route($content, $path) {
                 'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
             ]
         ];
-        foreach (\g(\LOT . \D . 'page', 0, true) as $k => $v) {
+        $loc = \Hook::fire('link', ['/-/sitemap.xml']);
+        $lot[1][$loc] = [
+            0 => 'sitemap',
+            1 => [
+                ['lastmod', \date('c', \filemtime($folder_page)), []],
+                ['loc', $loc, []]
+            ],
+            2 => []
+        ];
+        foreach (\g($folder_page, 0, true) as $k => $v) {
             if (0 === \q(\g($k, 'archive,page'))) {
                 // Ignore empty folder(s)
                 continue;
@@ -77,7 +101,7 @@ function route($content, $path) {
             ])) {
                 continue;
             }
-            $loc = \Hook::fire('link', ['/' . \strtr(\strtr($k, [\LOT . \D . 'page' . \D => ""]), \D, '/') . '/sitemap.xml']);
+            $loc = \Hook::fire('link', ['/' . \strtr(\strtr($k, [$folder_page . \D => ""]), \D, '/') . '/sitemap.xml']);
             $lot[1][$loc] = [
                 0 => 'sitemap',
                 1 => [
