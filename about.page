@@ -10,5 +10,5 @@ version: 3.0.2
 
 ### Usage
 
- - Normal view → `./route/to/page`
- - Sitemap view → `./route/to/page/sitemap.xml`
+ - Normal view → `./route/to/article`
+ - Sitemap view → `./route/to/article/sitemap.xml`
