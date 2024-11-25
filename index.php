@@ -36,6 +36,7 @@ function route($content, $path) {
         ];
         // `./-/sitemap.xml`
         if ('-' === $path) {
+            $exist = true;
             foreach (\g($folder_page, 'archive,page') as $k => $v) {
                 $loc = \Hook::fire('link', ['/' . ($route === ($n = \pathinfo($k, \PATHINFO_FILENAME)) ? "" : $n)]);
                 $lot[1][$loc] = [
@@ -50,20 +51,15 @@ function route($content, $path) {
                 ];
             }
         } else if ($exist) {
-            foreach (\g($folder, 0, true) as $k => $v) {
-                if (!$kk = \exist([
-                    $k . '.archive',
-                    $k . '.page'
-                ], 1)) {
-                    continue;
-                }
-                $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($k, [$folder_page . \D => ""]), \D, '/'))]);
+            foreach (\g($folder, 'archive,page', true) as $k => $v) {
+                $v = \dirname($k) . \D . \pathinfo($k, \PATHINFO_FILENAME);
+                $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($v, [$folder_page . \D => ""]), \D, '/'))]);
                 $priority = \b(1 - (\substr_count($r, '/') * 0.1), [0.5, 1]); // `0.5` to `1.0`
                 $lot[1][$loc] = [
                     0 => 'url',
                     1 => [
                         ['changefreq', 'monthly', []],
-                        ['lastmod', \date('c', \filemtime($kk)), []],
+                        ['lastmod', \date('c', \filemtime($k)), []],
                         ['loc', $loc, []],
                         ['priority', $priority, []]
                     ],
