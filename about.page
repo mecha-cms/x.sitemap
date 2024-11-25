@@ -5,7 +5,7 @@ icon: 'M9,2V8H11V11H5C3.89,11 3,11.89 3,13V16H1V22H7V16H5V13H11V16H9V22H15V16H13
 color: '#199284'
 author: Taufik Nurrohman
 type: Markdown
-version: 3.0.3
+version: 3.0.2
 ...
 
 ### Usage
