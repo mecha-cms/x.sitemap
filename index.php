@@ -26,7 +26,7 @@ function route($content, $path) {
     ], 1) ?: null);
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
-    if ("" !== $path) {
+    if ("" !== $path && '.' !== $path) {
         $lot = [
             0 => 'urlset',
             1 => [],
@@ -39,7 +39,7 @@ function route($content, $path) {
             $exist = true;
             foreach (\g($folder_page, 'archive,page') as $k => $v) {
                 $loc = \Hook::fire('link', ['/' . ($route === ($n = \pathinfo($k, \PATHINFO_FILENAME)) ? "" : $n)]);
-                $lot[1][$loc] = [
+                $lot[1][$k] = [
                     0 => 'url',
                     1 => [
                         ['changefreq', 'monthly', []],
@@ -55,7 +55,7 @@ function route($content, $path) {
                 $v = \dirname($k) . \D . \pathinfo($k, \PATHINFO_FILENAME);
                 $loc = \Hook::fire('link', ['/' . ($r = \strtr(\strtr($v, [$folder_page . \D => ""]), \D, '/'))]);
                 $priority = \b(1 - (\substr_count($r, '/') * 0.1), [0.5, 1]); // `0.5` to `1.0`
-                $lot[1][$loc] = [
+                $lot[1][$k] = [
                     0 => 'url',
                     1 => [
                         ['changefreq', 'monthly', []],
@@ -78,7 +78,7 @@ function route($content, $path) {
             ]
         ];
         $loc = \Hook::fire('link', ['/-/sitemap.xml']);
-        $lot[1][$loc] = [
+        $lot[1][""] = [
             0 => 'sitemap',
             1 => [
                 ['lastmod', \date('c', \filemtime($folder_page)), []],
@@ -91,17 +91,17 @@ function route($content, $path) {
                 // Ignore empty folder(s)
                 continue;
             }
-            if (!$kk = \exist([
+            if (!$v = \exist([
                 $k . '.archive',
                 $k . '.page'
             ])) {
                 continue;
             }
             $loc = \Hook::fire('link', ['/' . \strtr(\strtr($k, [$folder_page . \D => ""]), \D, '/') . '/sitemap.xml']);
-            $lot[1][$loc] = [
+            $lot[1][$v] = [
                 0 => 'sitemap',
                 1 => [
-                    ['lastmod', \date('c', \filemtime($kk)), []],
+                    ['lastmod', \date('c', \filemtime($v)), []],
                     ['loc', $loc, []]
                 ],
                 2 => []
