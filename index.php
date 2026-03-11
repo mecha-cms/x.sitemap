@@ -3,7 +3,10 @@
 // Insert some HTML `<link>` that maps to the sitemap resource
 function content($content) {
     \extract(\lot(), \EXTR_SKIP);
-    return \strtr($content ?? "", ['</head>' => '<link href="' . $url->current(false, false) . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($state->title) . '" type="application/xml"></head>']);
+    if (empty($page)) {
+        return $content;
+    }
+    return \strtr($content ?? "", ['</head>' => '<link href="' . $page->link . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($state->title) . '" type="application/xml"></head>']);
 }
 
 function route($content, $path) {
@@ -123,7 +126,7 @@ function route($content, $path) {
     return $fire ? $fire . '(' . \To::JSON($content) . ');' : $content;
 }
 
-if ('sitemap.xml' !== \basename($url->path ?? "")) {
+if ('sitemap.xml' !== \basename($link->path ?? "")) {
     \Hook::set('content', __NAMESPACE__ . "\\content", -1);
 } else {
     \Hook::set('route', __NAMESPACE__ . "\\route", 10);
