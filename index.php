@@ -3,7 +3,7 @@
 // Insert some HTML `<link>` that maps to the sitemap resource
 function content($content) {
     \extract(\lot(), \EXTR_SKIP);
-    if (empty($page)) {
+    if (!$content || empty($page)) {
         return $content;
     }
     return \strtr($content ?? "", ['</head>' => '<link href="' . $page->link . '/sitemap.xml" rel="sitemap" title="' . \i('Sitemap') . ' | ' . \w($state->title) . '" type="application/xml"></head>']);
@@ -20,28 +20,23 @@ function route($content, $path) {
         \status(403);
         return "";
     }
+    $home = \trim($state->home ?? 'index', '/');
     $path = \trim(\dirname($path ?? ""), '/');
-    $route = \trim($state->route ?? 'index', '/');
-    $folder = ($folder_page = \LOT . \D . 'page') . \D . ($path ?: $route);
-    $page = new \Page($exist = \exist([
-        $folder . '.archive',
-        $folder . '.page'
-    ], 1) ?: null);
+    $folder = ($folder_page = \LOT . \D . 'page') . \D . \rawurldecode($path ?: $home);
+    $page = new \Page($exist = $folder . '.{' . \x\page\x() . '}', 1) ?: null);
     // `./foo/sitemap.xml`
     // `./foo/bar/sitemap.xml`
     if ("" !== $path && '.' !== $path) {
         $lot = [
             0 => 'urlset',
             1 => [],
-            2 => [
-                'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
-            ]
+            2 => ['xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9']
         ];
         // `./-/sitemap.xml`
         if ('-' === $path) {
             $exist = true;
             foreach (\g($folder_page, 'archive,page') as $k => $v) {
-                $loc = \Hook::fire('link', ['/' . ($route === ($n = \pathinfo($k, \PATHINFO_FILENAME)) ? "" : $n)]);
+                $loc = \Hook::fire('link', ['/' . ($home === ($n = \pathinfo($k, \PATHINFO_FILENAME)) ? "" : $n)]);
                 $lot[1][$k] = [
                     0 => 'url',
                     1 => [
@@ -76,9 +71,7 @@ function route($content, $path) {
         $lot = [
             0 => 'sitemapindex',
             1 => [],
-            2 => [
-                'xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9'
-            ]
+            2 => ['xmlns' => 'http://www.sitemaps.org/schemas/sitemap/0.9']
         ];
         $loc = \Hook::fire('link', ['/-/sitemap.xml']);
         $lot[1][""] = [
@@ -94,10 +87,7 @@ function route($content, $path) {
                 // Ignore empty folder(s)
                 continue;
             }
-            if (!$v = \exist([
-                $k . '.archive',
-                $k . '.page'
-            ])) {
+            if (!$v = \exist($k . '.{' . \x\page\x() . '}', 1)) {
                 continue;
             }
             $loc = \Hook::fire('link', ['/' . \strtr(\strtr($k, [$folder_page . \D => ""]), \D, '/') . '/sitemap.xml']);
